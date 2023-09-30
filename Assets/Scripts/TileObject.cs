@@ -21,8 +21,11 @@ public class TileObject : MonoBehaviour
     bool dry;
     [HideInInspector] public TileController tile;
 
-    public void Init()
+    public void Init(EnvironmentManager _eMan)
     {
+        if (tree && !_eMan.trees.Contains(this)) {
+            _eMan.AddTree(this);
+        }
         SetMaterial();
     }
 
@@ -33,10 +36,11 @@ public class TileObject : MonoBehaviour
         moistureContent *= mod;
     }
 
-    public void Dry(float mod)
+    public void Dry(float mod, float fuelAddition)
     {
         //recolor to be dry 
         transform.localScale = scaleMin;
+        fuelValue += fuelAddition;
         moistureContent *= mod;
     }
 
@@ -45,7 +49,9 @@ public class TileObject : MonoBehaviour
     {
         eMan = EnvironmentManager.i;
 
-        if (tree) eMan.trees.Add(this);
+        if (tree && !eMan.trees.Contains(this)) {
+            eMan.AddTree(this);
+        }
         transform.localScale = Vector3.Lerp(scaleMin, scaleMax, Random.Range(0.0f, 1));
     }
 
@@ -56,6 +62,7 @@ public class TileObject : MonoBehaviour
 
     public float Burn(Fire fire, float amountNeeded)
     {
+        if (eMan == null) return 0;
         amountNeeded *= eMan.GetFuelBurnModifier(fire.temp);
         if (fire.temp > maxTemp) amountNeeded *= 2;
 
@@ -83,6 +90,7 @@ public class TileObject : MonoBehaviour
     {
         if (fuelValue < 3) Destroy(gameObject);
 
+        if (tile == null) return;
         if (tile.IsDry() != dry) SetMaterial();
     }
 
@@ -93,5 +101,10 @@ public class TileObject : MonoBehaviour
         if (dryMat != null && dry) mat = dryMat;
         if (wetMat != null && !dry) mat = wetMat;
         foreach (var r in renderers) r.material = mat; ;
+    }
+
+    private void OnDestroy()
+    {
+        if (Application.isPlaying && EnvironmentManager.i != null) EnvironmentManager.i.RemoveTree(this);
     }
 }

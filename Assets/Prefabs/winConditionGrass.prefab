@@ -1140,7 +1140,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   scaleMin: {x: 1, y: 1, z: 1}
   scaleMax: {x: 1.1, y: 1.5, z: 1.1}
-  fuelValue: 50
+  fuelValue: 40
   moistureContent: 0.5
   maxTemp: 20
   minTemp: 0

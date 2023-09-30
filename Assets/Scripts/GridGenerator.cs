@@ -10,7 +10,7 @@ public class GridGenerator : MonoBehaviour
     public Vector2 gridDimensions = new Vector2(50, 50);
     [SerializeField] float tileWidth, tileGap;
 
-    [SerializeField] List<TileController> tiles = new List<TileController>();
+    public List<TileController> tiles = new List<TileController>();
 
     private void Update()
     {

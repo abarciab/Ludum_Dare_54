@@ -16,10 +16,13 @@ public class CameraControllers : MonoBehaviour
         moveDelta = Vector3.Lerp(moveDelta, moveDir, moveSmoothness);
         transform.position += moveSpeed * Time.deltaTime * moveDelta;
 
-        float mouseDelta = Input.mouseScrollDelta.y;
+        float mouseDelta = Input.mouseScrollDelta.y * Time.deltaTime;
         scrollDelta = Mathf.Lerp(scrollDelta, mouseDelta, scrollSmoothness);
-        if (scrollDelta < 0 && transform.localPosition.y < yLimits.y) transform.position += Vector3.up * Mathf.Abs(scrollDelta) * scrollSpeed * Time.deltaTime;
-        if (scrollDelta > 0 && transform.localPosition.y > yLimits.x) transform.position += Vector3.down * Mathf.Abs(scrollDelta) * scrollSpeed * Time.deltaTime;
+        if (scrollDelta < 0 && transform.localPosition.y < yLimits.y) transform.position += Vector3.up * Mathf.Abs(scrollDelta) * scrollSpeed;
+        if (scrollDelta > 0 && transform.localPosition.y > yLimits.x) transform.position += Vector3.down * Mathf.Abs(scrollDelta) * scrollSpeed;
+        var pos = transform.localPosition;
+        pos.y = Mathf.Clamp(pos.y, yLimits.x, yLimits.y);
+        transform.localPosition = pos;
 
         float progress = (transform.position.y - yLimits.x) / Mathf.Abs(Mathf.Abs(yLimits.x) - Mathf.Abs(yLimits.y));
         float xRot = Mathf.Lerp(xRotLimits.x, xRotLimits.y, progress);

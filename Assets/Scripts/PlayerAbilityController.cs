@@ -22,7 +22,7 @@ public class PlayerAbilityController : MonoBehaviour
     [Header("Dry")]
     public bool usingDry;
     [SerializeField] GameObject dryEffectPrefab;
-    [SerializeField] float dryRadius = 3, dryMod = 0.2f;
+    [SerializeField] float dryRadius = 3, dryMod = 0.2f, dryFuelAddition;
     public int dryUsesLeft = 2;
 
 
@@ -54,20 +54,20 @@ public class PlayerAbilityController : MonoBehaviour
 
     void DryTiles()
     {
-        if (gMan.selectedTile == null) return;
+        if (gMan.selectedTile == null || dryUsesLeft <= 0) return;
 
         var selected = gMan.selectedTile;
         Instantiate(dryEffectPrefab, selected.transform.position, Quaternion.identity, transform);
         drySound.Play();
         var tiles = EnvironmentManager.i.GetTilesInRadius(selected.gridPos, dryRadius);
-        foreach (var tile in tiles) tile.Dry(dryMod);
+        foreach (var tile in tiles) tile.Dry(dryMod, growRadius);
 
         dryUsesLeft--;
     }
 
     void GrowTiles()
     {
-        if (gMan.selectedTile == null) return;
+        if (gMan.selectedTile == null || growUsesLeft <= 0) return;
 
         var selected = gMan.selectedTile;
         Instantiate(LightningEffectPrefab, selected.transform.position, Quaternion.identity, transform);
@@ -80,7 +80,7 @@ public class PlayerAbilityController : MonoBehaviour
 
     void SummonLightning()
     {
-        if (gMan.selectedTile == null) return;
+        if (gMan.selectedTile == null || lightningUsesLeft <= 0) return;
 
         var selected = gMan.selectedTile;
         Instantiate(LightningEffectPrefab, selected.transform.position, Quaternion.identity, transform);

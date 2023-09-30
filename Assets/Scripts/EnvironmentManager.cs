@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.ShaderGraph.Internal;
 using UnityEngine;
+using UnityEngine.Rendering.Universal;
 
 [ExecuteAlways]
 public class EnvironmentManager : MonoBehaviour
@@ -23,7 +25,7 @@ public class EnvironmentManager : MonoBehaviour
 
     [Header("Misc")]
     public float MoistureDecay = 0.05f;
-    public float riverThreshold = 0.90f, dryThreshold = 0.4f, lowTempFireMoistureThreshold = 0.4f, lowTempFireThreshold = 1, lowFireMoistureDebuff;
+    public float riverThreshold = 0.90f, dryThreshold = 0.4f, lowTempFireMoistureThreshold = 0.4f, lowTempFireThreshold = 1, lowMoistureFireDeathChance = 0.2f;
     [HideInInspector] public List<Fire> currentFire = new List<Fire>();
     int gridSize = 5;
 
@@ -35,7 +37,8 @@ public class EnvironmentManager : MonoBehaviour
     [Header("Sounds")]
     [SerializeField] Sound backgroundFire;
 
-    [HideInInspector] public List<TileObject> trees = new List<TileObject>();
+    public List<TileObject> trees = new List<TileObject>();
+    [SerializeField] int totalTrees;
 
     public float GetFuelBurnModifier(float fireTemp)
     {
@@ -67,16 +70,24 @@ public class EnvironmentManager : MonoBehaviour
 
     public float GetTreeProgress()
     {
+        if (trees == null || trees.Count == 0) return 0;
+        
         int burnedCount = 0;
-        foreach (var t in trees) if (t == null || t.fuelValue < 3) burnedCount += 1;
+        foreach (var t in trees) {
+            if (t == null || t.fuelValue < 3) burnedCount += 1;
+        }
+        burnedCount += totalTrees - trees.Count;
 
-        return (float)burnedCount / trees.Count;
+        float percent = (float)burnedCount / totalTrees;
+        //print("precent: " + percent + ", burnedCount: " + burnedCount + ", totalTrees: " + totalTrees);
+        return percent;
     }
 
     private void Start()
     {
         SetupLevel();
-        gridSize = (int)FindObjectOfType<GridGenerator>().gridDimensions.x;
+        //gridSize = (int)FindObjectOfType<GridGenerator>().gridDimensions.x;
+        gridSize = 40;
 
         if (!Application.isPlaying) return;
 
@@ -150,13 +161,42 @@ public class EnvironmentManager : MonoBehaviour
         foreach (var t in tiles) t.DeleteObjects();
     }
 
-    void SetupLevel()
+    public void AddTree(TileObject tree)
     {
+        if (tree != null && !trees.Contains(tree)) trees.Add(tree);
+    }
+
+    public void RemoveTree(TileObject tree)
+    {
+        trees.Remove(tree);
+    }
+
+    public void SetupLevel(GridGenerator newLevel = null)
+    {
+        if (newLevel != null) {
+            tiles = newLevel.tiles;
+        }
+        else if (tiles == null || tiles.Count == 0 || tiles[0] == null) { 
+            var grid = FindObjectOfType<GridGenerator>();
+            tiles = grid.tiles;
+        }
+
+        BurningTiles.Clear();
         trees.Clear();
         var gMan = GetComponent<GameManager>();
-        if (gMan == null || tiles == null ||tiles.Count == 0 || tiles[0] == null) return;
+        if (gMan == null || tiles == null || tiles.Count == 0 || tiles[0] == null) {
+            return;
+        }
 
-        foreach (var t in tiles) t.Init(gMan, this); 
+        foreach (var t in tiles) t.Init(gMan, this);
 
+        for (int i = 0; i < trees.Count; i++) {
+            if (trees[i] == null) {
+                trees.RemoveAt(i);
+                i -= 1;
+            }
+        }
+
+        totalTrees = trees.Count;
     }
 }

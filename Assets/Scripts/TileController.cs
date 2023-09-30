@@ -28,6 +28,8 @@ public class TileController : MonoBehaviour
     [Header("Misc")]
     public Material dryMat;
     public Material wetMat;
+    bool dontSpread;
+
     public bool IsDry()
     {
         if (!Application.isPlaying) eMan = FindObjectOfType<EnvironmentManager>(true);
@@ -45,7 +47,7 @@ public class TileController : MonoBehaviour
         foreach (var tod in tileObjectData) objects.Add(Instantiate(tod.prefab, transform).GetComponent<TileObject>());
         foreach (var o in objects) {
             o.tile = this;
-            o.Init();
+            o.Init(eMan);
         }
 
         SetMaterial();
@@ -54,8 +56,8 @@ public class TileController : MonoBehaviour
     public void DeleteObjects()
     {
         for (int i = 0; i < objects.Count; i++) {
-            if (Application.isPlaying) Destroy(objects[i].gameObject);
-            else DestroyImmediate(objects[i].gameObject);
+            if (Application.isPlaying && objects[i] != null) Destroy(objects[i].gameObject);
+            else if (objects[i] != null) DestroyImmediate(objects[i].gameObject);
         }
         objects.Clear();
     }
@@ -217,11 +219,17 @@ public class TileController : MonoBehaviour
         objects.Add(Instantiate(newObj.prefab, transform).GetComponent<TileObject>());
     }
 
-    public void Dry(float mod)
+    public void Dry(float mod, float fuelAddition)
     {
-        foreach (var o in objects) o.Dry(mod);
+        foreach (var o in objects) o.Dry(mod, fuelAddition);
         moistureContent *= mod;
+        fuel += fuelAddition;
         SetMaterial();
+    }
+
+    public void DontSpread()
+    {
+        dontSpread = true;
     }
 
     float chanceToIgnite(Fire otherfire)
@@ -259,15 +267,20 @@ public class TileController : MonoBehaviour
         if (onFire && fireData != null) {
             fireData.Tick();
             if (fuel > 3 && fireData.temp >= GetHighestMinTemp()) SpreadFire();
-            
         }
-            if (onFire && fireData == null) onFire = false;
+        if (onFire && fireData == null) {
+            onFire = false;
+            fuel = 0;
+        }
 
         if (fuel < 3) groundRenderer.material = gMan.burnedGrass;
     }
 
     void SpreadFire()
     {
+        if (dontSpread) return;
+        dontSpread = false;
+
         eMan.AttemptSpread(gridPos, fireData);
     }
 

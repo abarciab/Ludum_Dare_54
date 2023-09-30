@@ -62,8 +62,14 @@ public class Fire : MonoBehaviour
         float fuelNeeded = Mathf.Lerp(eMan.fireFuelConsumptionLimits.x, eMan.fireFuelConsumptionLimits.y, Mathf.Min(1, age / matureAge));
         bool belowMaxTemp = tile.WillIncreaseTemp(this, fuelNeeded);
         tile.BurnFuel(this, fuelNeeded);
-        float moistureDebuff = temp < eMan.lowTempFireThreshold && !tile.IsDry() ? eMan.lowFireMoistureDebuff : 1;
-        if (tile.AboveMinTemp(this) && belowMaxTemp) temp += eMan.fireTempIncreaseRate * moistureDebuff;
+        if (temp < eMan.lowTempFireThreshold && !tile.IsDry()) RollDeath();
+        if (tile.AboveMinTemp(this) && belowMaxTemp) temp += eMan.fireTempIncreaseRate;
+    }
+
+    void RollDeath()
+    {
+        if (Random.Range(0.0f, 1) < eMan.lowMoistureFireDeathChance) Destroy(gameObject);
+        else if (Random.Range(0.0f, 1) < 0.5f) tile.DontSpread();
     }
 
     bool FuelAvaliable()

@@ -16,12 +16,15 @@ public class UIController : MonoBehaviour
     [SerializeField] float activeAlpha = 1, inactiveAlpha = 0.5f;
 
     [Space()]
+    [SerializeField] GameObject lightningButtonParent;
     [SerializeField] TextMeshProUGUI lightningUses;
     [SerializeField] Image lightningButton;
     [Space()]
+    [SerializeField] GameObject growButtonParent;
     [SerializeField] TextMeshProUGUI growUses;
     [SerializeField] Image growButton;
     [Space()]
+    [SerializeField] GameObject dryButtonParent;
     [SerializeField] TextMeshProUGUI dryUses;
     [SerializeField] Image dryButton;
 
@@ -29,6 +32,9 @@ public class UIController : MonoBehaviour
     [Header("Top bar")]
     [SerializeField] Slider progressSlider;
     [SerializeField] TextMeshProUGUI progressText;
+
+    [Header("Misc")]
+    [SerializeField] GameObject nextLevelButton;
 
 
     PlayerAbilityController abilityController;
@@ -56,9 +62,9 @@ public class UIController : MonoBehaviour
 
     private void Update()
     {
-        SetButtonVisuals(lightningButton, abilityController.usingLightning, lightningUses, abilityController.lightningUsesLeft);
-        SetButtonVisuals(growButton, abilityController.usingGrow, growUses, abilityController.growUsesLeft);
-        SetButtonVisuals(dryButton, abilityController.usingDry, dryUses, abilityController.dryUsesLeft);
+        SetButtonVisuals(lightningButton, abilityController.usingLightning, lightningUses, abilityController.lightningUsesLeft, lightningButtonParent);
+        SetButtonVisuals(growButton, abilityController.usingGrow, growUses, abilityController.growUsesLeft, growButtonParent);
+        SetButtonVisuals(dryButton, abilityController.usingDry, dryUses, abilityController.dryUsesLeft, dryButtonParent);
 
         if (abilityController.lightningUsesLeft + abilityController.growUsesLeft + abilityController.dryUsesLeft == 0) {
             bottomBarHidden = false;
@@ -68,9 +74,10 @@ public class UIController : MonoBehaviour
         float progress = eMan.GetTreeProgress();
         progressSlider.value = progress;
         progressText.text = Mathf.RoundToInt(progress * 100) + "%";
+        nextLevelButton.SetActive(progress >= .8);
     }
 
-    void SetButtonVisuals(Image buttonImage, bool active, TextMeshProUGUI usesText, int usesLeft)
+    void SetButtonVisuals(Image buttonImage, bool active, TextMeshProUGUI usesText, int usesLeft, GameObject buttonParent)
     {
         float buttonAlpha = active ? activeAlpha : inactiveAlpha;
         var col = buttonImage.color;
@@ -78,5 +85,8 @@ public class UIController : MonoBehaviour
         buttonImage.color = col;
 
         usesText.text = usesLeft.ToString();
+
+        if (usesLeft <= 0) buttonParent.SetActive(false); 
+        else buttonParent.SetActive(true);
     }
 }
