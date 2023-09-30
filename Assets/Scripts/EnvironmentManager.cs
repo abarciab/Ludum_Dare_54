@@ -178,6 +178,7 @@ public class EnvironmentManager : MonoBehaviour
         }
         else if (tiles == null || tiles.Count == 0 || tiles[0] == null) { 
             var grid = FindObjectOfType<GridGenerator>();
+            if (grid == null) return;
             tiles = grid.tiles;
         }
 
