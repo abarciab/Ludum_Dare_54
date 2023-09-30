@@ -5,12 +5,12 @@ using UnityEngine;
 [ExecuteAlways]
 public class GridGenerator : MonoBehaviour
 {
-    [SerializeField] bool generate, copyAndReplace;
+    [SerializeField] bool generate, copyAndReplace, setAsActive;
     [SerializeField] GameObject tilePrefab;
-    [SerializeField] Vector2 gridDimensions = new Vector2(50, 50);
+    public Vector2 gridDimensions = new Vector2(50, 50);
     [SerializeField] float tileWidth, tileGap;
 
-    List<TileController> tiles = new List<TileController>();
+    public List<TileController> tiles = new List<TileController>();
 
     private void Update()
     {
@@ -21,6 +21,13 @@ public class GridGenerator : MonoBehaviour
         if (copyAndReplace) {
             copyAndReplace = false;
             CopyAndReplaceGrid();
+        }
+
+        if (!Application.isPlaying) return;
+
+        if (setAsActive) {
+            setAsActive = false;
+            EnvironmentManager.i.tiles = tiles;
         }
     }
 
@@ -42,9 +49,17 @@ public class GridGenerator : MonoBehaviour
 
         for (int i = 0; i < oldTiles.Count; i++) {
             tiles[i].moistureContent = oldTiles[i].moistureContent;
+            tiles[i].maxTemp = oldTiles[i].maxTemp;
+            tiles[i].tileObjectData = new List<TileObjectData>(oldTiles[i].tileObjectData);
             oldTiles[i].gameObject.name += "OLD";
         }
         DeleteOldChildren();
+        SetAsActive();
+    }
+
+    void SetAsActive()
+    {
+        FindObjectOfType<EnvironmentManager>().tiles = tiles;
     }
 
     void DeleteOldChildren()
@@ -62,13 +77,13 @@ public class GridGenerator : MonoBehaviour
             for (int y = 0; y < gridDimensions.y; y++) {
                 var newTile = Instantiate(tilePrefab, transform);
                 newTile.transform.localPosition = new Vector3(x * tileWidth + x * tileGap, 0, y * tileWidth + y * tileGap);
-                newTile.name = x + ", " + y;
+                newTile.name = x + ", " + y + ", index: " + tiles.Count;
                 var tile = newTile.GetComponent<TileController>();
                 tile.gridPos = new Vector2(x, y);
                 tiles.Add(tile); 
             }
         }
-        FindObjectOfType<EnvironmentManager>().tiles = tiles;   
+        SetAsActive();
     }
 
     void ClearGrid()
