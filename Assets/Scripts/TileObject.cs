@@ -18,6 +18,8 @@ public class TileObject : MonoBehaviour
     [Header("Visuals")]
     [SerializeField] List<Renderer> renderers = new List<Renderer>();
     [SerializeField] Material dryMat, wetMat;
+    [SerializeField] GameObject deadVersion, livingVersion;
+
     bool dry;
     [HideInInspector] public TileController tile;
 
@@ -52,7 +54,9 @@ public class TileObject : MonoBehaviour
         if (tree && !eMan.trees.Contains(this)) {
             eMan.AddTree(this);
         }
+
         transform.localScale = Vector3.Lerp(scaleMin, scaleMax, Random.Range(0.0f, 1));
+        transform.localEulerAngles = new Vector3(0, Random.Range(0, 360), 0);
     }
 
     public float GetBurnTemp()
@@ -88,14 +92,26 @@ public class TileObject : MonoBehaviour
 
     private void Update()
     {
-        if (fuelValue < 3) Destroy(gameObject);
+        if (fuelValue < 3) KillObject();
 
         if (tile == null) return;
         if (tile.IsDry() != dry) SetMaterial();
     }
 
+    void KillObject()
+    {
+        EnvironmentManager.i.RemoveTree(this);
+        if (deadVersion == null) Destroy(gameObject);
+        else {
+            deadVersion.SetActive(true);
+            if (livingVersion != null) livingVersion.SetActive(false);
+        }
+
+    }
+
     void SetMaterial()
     {
+        if (renderers == null || renderers.Count == 0) return;
         dry = tile.IsDry();
         var mat = dry ? tile.dryMat : tile.wetMat;
         if (dryMat != null && dry) mat = dryMat;
