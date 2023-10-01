@@ -3,7 +3,27 @@ guid: 242fa5d5251a40d48bbf499995d9e48b
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
-  externalObjects: {}
+  externalObjects:
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Human_Pant_Mat
+    second: {fileID: 2100000, guid: b62f73de09a8f9d4db60ddd38c1e5fc4, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Human_Shirt_Mat
+    second: {fileID: 2100000, guid: 3682c279d68c210439cc4afb3a56219e, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Human_Shoe_Mat
+    second: {fileID: 2100000, guid: 56b8d6af28f75e642bd8fb4e79151afc, type: 2}
+  - first:
+      type: UnityEngine:Material
+      assembly: UnityEngine.CoreModule
+      name: Human_Skin_Mat
+    second: {fileID: 2100000, guid: 7889017b4e1c1654490dffb1c5d5446e, type: 2}
   materials:
     materialImportMode: 2
     materialName: 0

@@ -38,6 +38,21 @@ public class TileController : MonoBehaviour
         return moistureContent < eMan.dryThreshold;
     }
 
+    public void ClearBurned()
+    {
+        foreach (var o in objects) if (o != null) o.ClearBurned();
+    }
+
+    public bool WasBurned()
+    {
+        return fuel < 3;
+    }
+
+    public void Regrow(TileObjectData newPlant, Vector2 scaleRange, float growTime)
+    {
+        AddObject(newPlant, true).Regrow(growTime, scaleRange);
+    }
+
     public void Init(GameManager gMan, EnvironmentManager eMan)
     {
         this.gMan = gMan;
@@ -179,7 +194,7 @@ public class TileController : MonoBehaviour
     public void Ignite(Fire otherFire, bool alwaysIgnite = false)
     {
         if (onFire) {
-            if (otherFire.temp > fireData.temp) fireData.temp = Mathf.Lerp(fireData.temp, otherFire.temp, eMan.fireTempSpreadValue);
+            if (otherFire != null && fireData != null && otherFire.temp > fireData.temp) fireData.temp = Mathf.Lerp(fireData.temp, otherFire.temp, eMan.fireTempSpreadValue);
             return;
         }
 
@@ -213,10 +228,14 @@ public class TileController : MonoBehaviour
         SetMaterial();
     }
 
-    void AddObject(TileObjectData newObj)
+    TileObject AddObject(TileObjectData newObj, bool hide = false)
     {
         tileObjectData.Add(newObj);
-        objects.Add(Instantiate(newObj.prefab, transform).GetComponent<TileObject>());
+        if (hide) objects.Add(Instantiate(newObj.prefab, new Vector3(0, -100, 0), Quaternion.identity, transform).GetComponent<TileObject>());
+        else objects.Add(Instantiate(newObj.prefab, transform).GetComponent<TileObject>());
+        var obj = objects[objects.Count - 1];
+        if (hide) obj.gameObject.SetActive(false);
+        return obj;
     }
 
     public void Dry(float mod, float fuelAddition)

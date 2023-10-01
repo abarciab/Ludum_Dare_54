@@ -4,10 +4,22 @@ using UnityEngine;
 
 public class CameraControllers : MonoBehaviour
 {
-    [SerializeField] float moveSpeed, scrollSpeed, moveSmoothness = 0.1f, scrollSmoothness = 0.1f;
+    [SerializeField] float moveSpeed, scrollSpeed, moveSmoothness = 0.1f, scrollSmoothness = 0.1f, lockedCameraXAngle;
     Vector3 moveDelta;
     [SerializeField] Vector2 yLimits, xRotLimits;
+    [SerializeField] Vector4 posLimits;
     float scrollDelta;
+
+    public void LockAndFrameAll(bool lockCam)
+    {
+        enabled = !lockCam;
+
+        if (!lockCam) return;
+        float xMid = Mathf.Lerp(posLimits.x, posLimits.y, 0.5f);
+        float yMid = Mathf.Lerp(posLimits.z, posLimits.w, 0.5f);
+        transform.position = new Vector3(xMid, yLimits.y, yMid);
+        Camera.main.transform.localEulerAngles = new Vector3(lockedCameraXAngle, 0, 0);
+    }
 
     private void Update()
     {

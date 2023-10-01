@@ -30,16 +30,82 @@ public class UIController : MonoBehaviour
 
 
     [Header("Top bar")]
+    [SerializeField] GameObject topBarParent;
+
+    [Space()]
     [SerializeField] Slider progressSlider;
     [SerializeField] TextMeshProUGUI progressText;
 
+    [Space()]
+    [SerializeField] TextMeshProUGUI windSpeedText;
+    [SerializeField] RectTransform windDirArrow;
+    [SerializeField] GameObject windParent;
+
     [Header("Misc")]
     [SerializeField] GameObject nextLevelButton;
+    [SerializeField] GameObject restartButton;
+
+    [Header("Text")]
+    [SerializeField] CanvasGroup textBackingGroup;
+    [SerializeField] TextMeshProUGUI text;
+    [SerializeField] GameObject textContinueButton;
 
 
     PlayerAbilityController abilityController;
     GameManager gMan;
     EnvironmentManager eMan;
+
+    public void HideAll()
+    {
+        bottomBar.gameObject.SetActive(false);
+        topBarParent.gameObject.SetActive(false);
+        restartButton.gameObject.SetActive(false);  
+        nextLevelButton.gameObject.SetActive(false);
+    }
+
+    public void ShowContinueButton()
+    {
+        textContinueButton.SetActive(true);
+    }
+
+    public void ShowText(string copy)
+    {
+        text.text = copy;
+        text.gameObject.SetActive(true);
+    }
+
+    public void DarkenScreen(float time)
+    {
+        textBackingGroup.transform.parent.gameObject.SetActive(true);
+        StartCoroutine(ShowTextBacking(time));
+    }
+
+    IEnumerator ShowTextBacking(float time)
+    {
+        float timePassed = 0;
+        while (timePassed < time) {
+            textBackingGroup.alpha = timePassed / time;
+            timePassed += Time.deltaTime;
+            yield return new WaitForEndOfFrame();
+        }
+        textBackingGroup.alpha = 1;
+    }
+
+    public void ShowGameplayUI()
+    {
+        bottomBar.gameObject.SetActive(true);
+        topBarParent.gameObject.SetActive(true);
+        restartButton.gameObject.SetActive(true);
+        nextLevelButton.gameObject.SetActive(true);
+
+        textBackingGroup.transform.parent.gameObject.SetActive(false);
+        textBackingGroup.alpha = 0;
+        text.gameObject.SetActive(false);
+        textContinueButton.SetActive(false);
+
+        bottomBarHidden = true;
+        ToggleBottomBar();
+    }
 
     private void Start()
     {
@@ -74,7 +140,32 @@ public class UIController : MonoBehaviour
         float progress = eMan.GetTreeProgress();
         progressSlider.value = progress;
         progressText.text = Mathf.RoundToInt(progress * 100) + "%";
-        nextLevelButton.SetActive(progress >= .8);
+        nextLevelButton.SetActive(progress >= .8 && progressSlider.gameObject.activeInHierarchy);
+
+        DisplayWind();
+    }
+
+    void DisplayWind()
+    {
+        if (eMan.currentWindSpeed > 0) windParent.SetActive(true);
+        else return;
+
+
+        float zRot = 0;
+        switch (eMan.currentWindDir) {
+            case cardinalDirection.NORTH:
+                zRot = 90;
+                break;
+            case cardinalDirection.SOUTH:
+                zRot = 270;
+                break;
+            case cardinalDirection.WEST:
+                zRot = 180;
+                break;
+        }
+        windDirArrow.localEulerAngles = new Vector3(0, 0, zRot);
+
+        windSpeedText.text = eMan.currentWindSpeed + " knots \n" + eMan.currentWindDir.ToString().ToLower();
     }
 
     void SetButtonVisuals(Image buttonImage, bool active, TextMeshProUGUI usesText, int usesLeft, GameObject buttonParent)

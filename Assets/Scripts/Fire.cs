@@ -17,10 +17,17 @@ public class Fire : MonoBehaviour
     [Header("model")]
     [SerializeField] List<Renderer> Renderers = new List<Renderer>();
 
+    public void AttemptDouse(float waterValue)
+    {
+        age *= eMan.waterFireMod;
+        temp *= eMan.waterFireMod;
+        if (age < matureAge / 2) Destroy(gameObject);
+    }
+
     private void OnEnable()
     {
         eMan = EnvironmentManager.i;
-        eMan.currentFire.Add(this);
+        if (!eMan.currentFires.Contains(this))eMan.currentFires.Add(this);
 
         transform.localEulerAngles = new Vector3(0, Random.Range(0, 360), 0);
 
@@ -82,6 +89,6 @@ public class Fire : MonoBehaviour
 
     private void OnDestroy()
     {
-        eMan.currentFire.Remove(this);
+        eMan.currentFires.Remove(this);
     }
 }

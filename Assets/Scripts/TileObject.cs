@@ -109,9 +109,38 @@ public class TileObject : MonoBehaviour
 
     }
 
+    public void Regrow(float growTime, Vector2 scaleRange)
+    {
+        var scaleMod = Random.Range(scaleRange.x, scaleRange.y);
+        var targetScale = transform.localScale * scaleMod;
+        transform.localScale = Vector3.zero;
+        gameObject.SetActive(true);
+
+        StartCoroutine(AnimateGrow(growTime, targetScale));
+    }
+
+    IEnumerator AnimateGrow(float growTime, Vector3 targetScale)
+    {
+        float timePassed = 0;
+        yield return new WaitForSeconds(0.1f);
+        transform.localPosition = new Vector3(0, 0, 0);
+
+        while (timePassed < growTime) {
+            transform.localScale = Vector3.Lerp(Vector3.zero, targetScale, timePassed/growTime);
+            timePassed += Time.deltaTime;
+            yield return new WaitForEndOfFrame();
+        }
+        transform.transform.localScale = targetScale;
+    }
+
+    public void ClearBurned()
+    {
+        if (fuelValue <= 3) Destroy(gameObject);
+    }
+
     void SetMaterial()
     {
-        if (renderers == null || renderers.Count == 0) return;
+        if (renderers == null || renderers.Count == 0 || renderers[0] == null) return;
         dry = tile.IsDry();
         var mat = dry ? tile.dryMat : tile.wetMat;
         if (dryMat != null && dry) mat = dryMat;
