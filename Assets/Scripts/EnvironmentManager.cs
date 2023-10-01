@@ -45,6 +45,7 @@ public class EnvironmentManager : MonoBehaviour
     [Header("Misc")]
     public float MoistureDecay = 0.05f;
     public float riverThreshold = 0.90f, dryThreshold = 0.4f, lowTempFireMoistureThreshold = 0.4f, lowTempFireThreshold = 1, lowMoistureFireDeathChance = 0.2f, waterFireMod;
+    [Range(0, 1)] public float colorVariationStrength = 0.5f, dryColVariationStrength = 0.1f;
     public List<Fire> currentFires = new List<Fire>();
     int gridSize = 5;
 

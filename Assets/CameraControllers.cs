@@ -4,11 +4,18 @@ using UnityEngine;
 
 public class CameraControllers : MonoBehaviour
 {
-    [SerializeField] float moveSpeed, scrollSpeed, moveSmoothness = 0.1f, scrollSmoothness = 0.1f, lockedCameraXAngle;
+    [SerializeField] float moveSpeed, scrollSpeed, moveSmoothness = 0.1f, scrollSmoothness = 0.1f, lockedCameraXAngle, rotSpeed;
     Vector3 moveDelta;
     [SerializeField] Vector2 yLimits, xRotLimits;
     [SerializeField] Vector4 posLimits;
     float scrollDelta;
+    Vector3 lastMousePos;
+    [SerializeField] LayerMask groundLayer;
+
+    private void Start()
+    {
+        lastMousePos = Input.mousePosition;
+    }
 
     public void LockAndFrameAll(bool lockCam)
     {
@@ -19,6 +26,7 @@ public class CameraControllers : MonoBehaviour
         float yMid = Mathf.Lerp(posLimits.z, posLimits.w, 0.5f);
         transform.position = new Vector3(xMid, yLimits.y, yMid);
         Camera.main.transform.localEulerAngles = new Vector3(lockedCameraXAngle, 0, 0);
+        transform.localEulerAngles = Vector3.zero;
     }
 
     private void Update()
@@ -34,6 +42,7 @@ public class CameraControllers : MonoBehaviour
         if (scrollDelta > 0 && transform.localPosition.y > yLimits.x) transform.position += Vector3.down * Mathf.Abs(scrollDelta) * scrollSpeed;
         var pos = transform.localPosition;
         pos.y = Mathf.Clamp(pos.y, yLimits.x, yLimits.y);
+        Camera.main.transform.localPosition = new Vector3(Camera.main.transform.localPosition.x, GetTerrainOffset(), Camera.main.transform.localPosition.z);
         transform.localPosition = pos;
 
         float progress = (transform.position.y - yLimits.x) / Mathf.Abs(Mathf.Abs(yLimits.x) - Mathf.Abs(yLimits.y));
@@ -41,6 +50,20 @@ public class CameraControllers : MonoBehaviour
         var current = transform.GetChild(0).localEulerAngles;
         current.x = xRot;
         transform.GetChild(0).localEulerAngles = current;
+
+        if (Input.GetMouseButtonDown(1)) lastMousePos = Input.mousePosition;
+        if (!Input.GetMouseButton(1)) return;
+
+        var newMousePos = Input.mousePosition;
+        float mouseRotDelta = (newMousePos - lastMousePos).x;
+        lastMousePos = newMousePos;
+        transform.localEulerAngles += Vector3.up * mouseRotDelta * rotSpeed * Time.deltaTime;
+    }
+
+    float GetTerrainOffset()
+    {
+        bool overTerrain = Physics.Raycast(transform.position, Vector3.down, out var hit, 200, groundLayer);
+        return overTerrain ? hit.point.y : 0;
     }
 
     Vector3 GetMoveDir()

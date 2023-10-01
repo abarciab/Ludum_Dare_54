@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
 using Unity.IO.LowLevel.Unsafe;
 using UnityEngine;
 
@@ -11,39 +12,100 @@ public class TileObject : MonoBehaviour
     public float fuelValue;
     public float moistureContent, maxTemp, minTemp;
     float burnTemp = 5;
-    [SerializeField] bool tree;
+    [SerializeField] bool tree, displayGrass;
+    GameObject displayGrassObj;
 
     EnvironmentManager eMan;
 
     [Header("Visuals")]
-    [SerializeField] List<Renderer> renderers = new List<Renderer>();
+    [SerializeField] List<Renderer> livingRenderers = new List<Renderer>();
+    [SerializeField] List<Renderer> deadRenderers = new List<Renderer>();
     [SerializeField] Material dryMat, wetMat;
     [SerializeField] GameObject deadVersion, livingVersion;
 
-    bool dry;
+    [Header("Variations")]
+    [SerializeField] bool livingVariety;
+    [SerializeField, ConditionalHide(nameof(livingVariety))] Transform livingVariationParent;
+    [SerializeField] bool deadVariety;
+    [SerializeField, ConditionalHide(nameof(deadVariety))] Transform deadVariationParent;
+    [SerializeField] bool useLivingColorVariation;
+    [SerializeField, Tooltip("A random color in this range will be mixed with the living colors for the listed renderers"), ConditionalHide(nameof(useLivingColorVariation))]
+    Gradient livingColorVariation;
+    Color livingColorMod;
+    [SerializeField] bool useDeadColorVariation;
+    [SerializeField, Tooltip("A random color in this range will be mixed with the dead colors for the listed renderers"), ConditionalHide(nameof(useDeadColorVariation))]
+    Gradient deadColorVariation;
+    Color deadColorMod;
+
+    [SerializeField] bool dry;
     [HideInInspector] public TileController tile;
 
     public void Init(EnvironmentManager _eMan)
     {
-        if (tree && !_eMan.trees.Contains(this)) {
-            _eMan.AddTree(this);
+        eMan = _eMan;
+
+        if (tree && !eMan.trees.Contains(this)) {
+            eMan.AddTree(this);
         }
+        
+        PickModel();
+        SelectColors();
         SetMaterial();
+
+        if (!Application.isPlaying) return;
+
+        if (displayGrass) {
+            displayGrassObj = Instantiate(GameManager.i.displayGrass, transform);
+            displayGrassObj.transform.localEulerAngles = new Vector3(0, Random.Range(0, 360), 0);
+            livingRenderers.AddRange(displayGrassObj.GetComponent<RendererCoordinator>().GetRenderers()); 
+        }
+    }
+
+    void SelectColors()
+    {
+        if (useLivingColorVariation) livingColorMod = livingColorVariation.Evaluate(Random.Range(0.0f, 1));
+        if (useDeadColorVariation) deadColorMod = deadColorVariation.Evaluate(Random.Range(0.0f, 1));
+    }
+
+    void PickModel()
+    {
+        if (!Application.isPlaying) return;
+
+        int index = 0;
+        if (livingVariety) {
+            index = Random.Range(0, livingVariationParent.childCount);
+            var selected = livingVariationParent.GetChild(index);
+            selected.parent = transform;
+            selected.gameObject.SetActive(true);
+            livingVersion = selected.gameObject;
+            Destroy(livingVariationParent.gameObject);
+        }
+        if (deadVariety) {
+            if (deadVariationParent.childCount <= index) index = Random.Range(0, deadVariationParent.childCount);
+            var selected = deadVariationParent.GetChild(index);
+            selected.parent = transform;
+            deadVersion = selected.gameObject;
+            Destroy(deadVariationParent.gameObject);
+        }
     }
 
     public void Grow(float mod)
     {
         //recolor to be wet
-        transform.localScale = scaleMax;
+        //transform.localScale = scaleMax;
         moistureContent *= mod;
+        dry = false;
+        SetMaterial();
     }
 
     public void Dry(float mod, float fuelAddition)
     {
         //recolor to be dry 
-        transform.localScale = scaleMin;
+        //transform.localScale = scaleMin;
         fuelValue += fuelAddition;
         moistureContent *= mod;
+        dry = true;
+        SetMaterial();
     }
 
 
@@ -104,6 +166,7 @@ public class TileObject : MonoBehaviour
         if (deadVersion == null) Destroy(gameObject);
         else {
             deadVersion.SetActive(true);
+            if (displayGrass) Destroy(displayGrassObj);
             if (livingVersion != null) livingVersion.SetActive(false);
         }
 
@@ -140,15 +203,32 @@ public class TileObject : MonoBehaviour
 
     void SetMaterial()
     {
-        if (renderers == null || renderers.Count == 0 || renderers[0] == null) return;
-        dry = tile.IsDry();
+        if (!Application.isPlaying || tile == null) return;
+
+        if (fuelValue < 3) {
+            foreach (var r in deadRenderers) {
+                if (r == null) continue;
+                if (useDeadColorVariation) r.material.color = Color.Lerp(r.material.color, deadColorMod, eMan.colorVariationStrength);
+            }
+            return;
+        }
+
+        if (livingRenderers == null || livingRenderers.Count == 0) return;
+        if (tile.IsDry()) dry = true;
         var mat = dry ? tile.dryMat : tile.wetMat;
         if (dryMat != null && dry) mat = dryMat;
         if (wetMat != null && !dry) mat = wetMat;
-        foreach (var r in renderers) r.material = mat; ;
+        foreach (var r in livingRenderers) {
+            if (r == null) continue;
+            r.material = mat;
+            if (useLivingColorVariation) {
+                float strength = dry ? eMan.dryColVariationStrength : eMan.colorVariationStrength;
+                r.material.color = Color.Lerp(r.material.color, livingColorMod, strength);
+            }
+        }
     }
 
-    private void OnDestroy()
+        private void OnDestroy()
     {
         if (Application.isPlaying && EnvironmentManager.i != null) EnvironmentManager.i.RemoveTree(this);
     }

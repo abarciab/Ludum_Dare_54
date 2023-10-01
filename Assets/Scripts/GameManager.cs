@@ -16,6 +16,7 @@ public class GameManager : MonoBehaviour
 
     [Header("Encyclopedia")]
     public GameObject firePrefab;
+    public GameObject displayGrass;
     public Material healthyGrass, dryGrass, burnedGrass, water;
 
     [Header("Levels")]
@@ -27,6 +28,10 @@ public class GameManager : MonoBehaviour
     public string nextText;
     [SerializeField] float textDarkenTime = 0.5f;
     [SerializeField] float textshowTime = 4;
+
+    [Header("Misc")]
+    public float detailRenderDist = 10;
+    public float detailFadeDist = 3;
 
     CameraControllers cam;
     UIController ui;
@@ -96,5 +101,15 @@ public class GameManager : MonoBehaviour
 
         UIController.i.ShowGameplayUI();
         currentLevel += 1;
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        if (!Application.isPlaying) return;
+
+        Gizmos.color = Color.white;
+        Gizmos.DrawWireSphere(Camera.main.transform.position, detailRenderDist);
+        Gizmos.color = Color.gray;
+        Gizmos.DrawWireSphere(Camera.main.transform.position, detailRenderDist - detailFadeDist);
     }
 }

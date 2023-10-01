@@ -29,6 +29,7 @@ public class TileController : MonoBehaviour
     public Material dryMat;
     public Material wetMat;
     bool dontSpread;
+    [SerializeField] GameObject ground; 
 
     public bool IsDry()
     {
@@ -167,6 +168,7 @@ public class TileController : MonoBehaviour
     {
         gMan = GameManager.i;
         eMan = EnvironmentManager.i;
+        ground.SetActive(true);
 
         SetMaterial();
     }

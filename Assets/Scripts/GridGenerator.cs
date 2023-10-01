@@ -1,16 +1,21 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.TerrainTools;
 using UnityEngine;
 
 [ExecuteAlways]
 public class GridGenerator : MonoBehaviour
 {
-    [SerializeField] bool generate, copyAndReplace, setAsActive;
+    [SerializeField] bool generate, copyAndReplace, setAsActive, alignToTerrain;
     [SerializeField] GameObject tilePrefab;
     public Vector2 gridDimensions = new Vector2(50, 50);
     [SerializeField] float tileWidth, tileGap;
 
     public List<TileController> tiles = new List<TileController>();
+
+    [Space()]
+    [SerializeField] LayerMask terrainLayer;
+    [SerializeField] bool useTerrain;
 
     private void Update()
     {
@@ -22,12 +27,24 @@ public class GridGenerator : MonoBehaviour
             copyAndReplace = false;
             CopyAndReplaceGrid();
         }
+        if (alignToTerrain) {
+            alignToTerrain = false;
+            AlignToTerrain();
+        }
 
         if (!Application.isPlaying) return;
 
         if (setAsActive) {
             setAsActive = false;
             EnvironmentManager.i.tiles = tiles;
+        }
+    }
+
+    void AlignToTerrain()
+    {
+        foreach (var t in tiles) {
+            bool foundGround = Physics.Raycast(t.transform.position + Vector3.up * 200, Vector3.down, out var hit, 500, terrainLayer);
+            if (foundGround) t.transform.position = hit.point;
         }
     }
 
