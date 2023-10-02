@@ -10,7 +10,7 @@ public class TileObject : MonoBehaviour
     public float fuelValue;
     public float moistureContent, maxTemp, minTemp;
     float burnTemp = 5;
-    [SerializeField] bool tree, displayGrass;
+    public bool tree, displayGrass;
     GameObject displayGrassObj;
 
     EnvironmentManager eMan;

@@ -25,6 +25,7 @@ public class CameraControllers : MonoBehaviour
 
     IEnumerator AnimateRegrow(float time)
     {
+        CameraShake.i.enabled = false;
         animating = true;
         float timePassed = 0;
         var cam = Camera.main.transform;
@@ -42,6 +43,7 @@ public class CameraControllers : MonoBehaviour
         }
 
         animating = false;
+        CameraShake.i.enabled = true;
     }
 
     private void Start()

@@ -16,6 +16,8 @@ public class Fire : MonoBehaviour
 
     [Header("model")]
     [SerializeField] List<Renderer> Renderers = new List<Renderer>();
+    [SerializeField] Transform randomSelectionParent;
+    [SerializeField] Vector2 yScaleRange;
 
     public void AttemptDouse(float waterValue)
     {
@@ -37,6 +39,15 @@ public class Fire : MonoBehaviour
 
         fireSound = Instantiate(fireSound);
         fireSound.Play(transform);
+
+        if (randomSelectionParent != null) {
+            var selected = randomSelectionParent.GetChild(Random.Range(0, randomSelectionParent.childCount - 1));
+            var scale = selected.localScale;
+            scale.y *= Random.Range(yScaleRange.x, yScaleRange.y);
+            selected.SetParent(transform, true);
+            selected.localScale = scale;
+            Destroy(randomSelectionParent.gameObject);
+        }
     }
 
     public void Tick()
@@ -61,7 +72,7 @@ public class Fire : MonoBehaviour
     void ColorFire()
     {
         Color col = eMan.GetFireTempColor(temp);
-        foreach (var r in Renderers) r.material.color = col;
+        foreach (var r in Renderers) if (r) r.material.color = col;
     }
 
     void BurnFuel()
