@@ -21,7 +21,7 @@ public class Fire : MonoBehaviour
 
     public void AttemptDouse(float waterValue)
     {
-        print("DOUSING");
+        //print("DOUSING");
         age *= eMan.waterFireMod;
         temp *= eMan.waterFireMod;
         if (age < matureAge / 2) Destroy(gameObject);
