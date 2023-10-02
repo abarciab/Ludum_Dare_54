@@ -37,8 +37,23 @@ public class TileObject : MonoBehaviour
     Gradient deadColorVariation;
     Color deadColorMod;
 
+    [Header("FireSource")]
+    public bool isFireSource;
+    [ConditionalHide(nameof(isFireSource))] public float temp; 
+    [SerializeField, ConditionalHide(nameof(isFireSource)), Range(0, 1)] float fakeFireSize;
+    [SerializeField, ConditionalHide(nameof(isFireSource))] float fireAnimationRate, fireScaleLerp = 0.01f;
+    [SerializeField, ConditionalHide(nameof(isFireSource))] Vector2 fireSizeRange, fireSpinSpeedRange;
+    [SerializeField, ConditionalHide(nameof(isFireSource))] Sound fireSound;
+    [SerializeField, ConditionalHide(nameof(isFireSource))] Transform fakeFire;
+    float _ffSize, fireSpinSpeed;
+
     [SerializeField] bool dry;
     [HideInInspector] public TileController tile;
+
+    private void OnValidate()
+    {
+        if (!Application.isPlaying && isFireSource && fakeFire != null) fakeFire.transform.localScale = Vector3.one * fakeFireSize;
+    }
 
     public void Init(EnvironmentManager _eMan)
     {
@@ -154,10 +169,26 @@ public class TileObject : MonoBehaviour
 
     private void Update()
     {
+        if (isFireSource) AnimateFireSource();
+
         if (fuelValue < 3) KillObject();
 
         if (tile == null) return;
         if (tile.IsDry() != dry) SetMaterial();
+    }
+
+    float fireAnimateCooldown;
+    void AnimateFireSource()
+    {
+        fakeFire.localScale = Vector3.one * Mathf.Lerp(fakeFire.localScale.x, _ffSize, fireScaleLerp);
+        fakeFire.transform.localEulerAngles += Vector3.up * fireSpinSpeed * Time.deltaTime;
+
+        fireAnimateCooldown -= Time.deltaTime;
+        if (fireAnimateCooldown > 0) return;
+        fireAnimateCooldown = fireAnimationRate;
+
+        _ffSize = Random.Range(fakeFireSize * fireSizeRange.x, fakeFireSize * fireSizeRange.y);
+        if (Random.Range(0.0f, 1) < 0.5f) fireSpinSpeed = Random.Range(fireSpinSpeedRange.x, fireSpinSpeedRange.y);
     }
 
     void KillObject()

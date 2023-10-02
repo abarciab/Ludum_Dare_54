@@ -16,7 +16,7 @@ public class GameManager : MonoBehaviour
 
     [Header("Encyclopedia")]
     public GameObject firePrefab;
-    public GameObject displayGrass;
+    public GameObject displayGrass, windEffect;
     public Material healthyGrass, dryGrass, burnedGrass, water;
 
     [Header("Levels")]

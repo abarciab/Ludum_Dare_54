@@ -15,20 +15,30 @@ public class PlayerAbilityController : MonoBehaviour
     [Header("Grow")]
     public bool usingGrow;
     [SerializeField] GameObject growEffectPrefab;
-    [SerializeField] float growRadius = 3, wetMod = 2f;
+    public float growRadius = 3;
+    [SerializeField] float wetMod = 2f;
     [SerializeField] TileObjectData grassObject;
     public int growUsesLeft = 2;
 
     [Header("Dry")]
     public bool usingDry;
     [SerializeField] GameObject dryEffectPrefab;
-    [SerializeField] float dryRadius = 3, dryMod = 0.2f, dryFuelAddition;
+    public float dryRadius = 3;
+    [SerializeField] float dryMod = 0.2f, dryFuelAddition;
     public int dryUsesLeft = 2;
+
+    [Header("Wind")]
+    public bool usingWind;
+    [SerializeField] GameObject windEffectPrefab;
+    public float windRadius;
+    [SerializeField] float windTime, windSpeed;
+    public cardinalDirection windDir;
+    public int windUsesLeft = 2;
 
 
     [Header("Sounds")]
     [SerializeField] Sound lightningSound;
-    [SerializeField] Sound growSound, drySound;
+    [SerializeField] Sound growSound, drySound, windSound;
 
     private void Start()
     {
@@ -37,6 +47,7 @@ public class PlayerAbilityController : MonoBehaviour
         lightningSound = Instantiate(lightningSound);
         growSound = Instantiate(growSound);
         drySound = Instantiate(drySound);
+        windSound = Instantiate(windSound);
     }
 
     void Update()
@@ -45,11 +56,27 @@ public class PlayerAbilityController : MonoBehaviour
 
         if (EventSystem.current.IsPointerOverGameObject()) return;
 
+        if (Input.GetKeyDown(KeyCode.R) && usingWind) windDir = (cardinalDirection)(((int)windDir + 1) % 4);
+
         if (!Input.GetMouseButtonDown(0)) return;
 
         if (usingLightning) SummonLightning();
         if (usingGrow) GrowTiles();
         if (usingDry) DryTiles();
+        if (usingWind) SummonWind();
+    }
+
+    void SummonWind()
+    {
+        if (gMan.selectedTile == null || windUsesLeft <= 0) return;
+
+        var selected = gMan.selectedTile;
+        Instantiate(windEffectPrefab, selected.transform.position, Quaternion.identity, transform);
+        windSound.Play();
+        var tiles = EnvironmentManager.i.GetTilesInRadius(selected.gridPos, windRadius);
+        foreach (var tile in tiles) tile.SummonWind(windDir, windSpeed, (int) EnvironmentManager.i.GetTickNumber(windTime)) ;
+
+        windUsesLeft--;
     }
 
     void DryTiles()
@@ -108,11 +135,18 @@ public class PlayerAbilityController : MonoBehaviour
         if (usingDry) SelectAbility(3);
     }
 
+    public void ToggleWind()
+    {
+        usingWind = !usingWind;
+        if (usingWind) SelectAbility(4);
+    }
+
     public void SelectAbility(int ability)
     {
-        usingLightning = usingGrow = usingDry = false;
+        usingLightning = usingGrow = usingDry = usingWind = false;
         if (ability == 1) usingLightning = true;
         if (ability == 2) usingGrow = true;
         if (ability == 3) usingDry = true;
+        if (ability == 4) usingWind = true;
     }
 }

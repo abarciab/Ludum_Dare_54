@@ -98,6 +98,9 @@ public class EnvironmentManager : MonoBehaviour
         var firePos = GetClosestFirePos(pos3);
         if (firePos.x == Mathf.Infinity) return Mathf.Infinity;
 
+        pos3.y = 0;
+        firePos.y = 0;
+
         return Vector3.Distance(firePos, pos3);
     }
 
@@ -150,6 +153,23 @@ public class EnvironmentManager : MonoBehaviour
         return progress * dist + fuelBurnModRange.x;
     }
 
+    public Vector2 TransformToGridPosition(Vector3 pos)
+    {
+        float smallestDist = Mathf.Infinity;
+        Vector2 bestPos = Vector2.zero;
+
+        var pos2 = new Vector2(pos.x, pos.z);
+        foreach (var t in tiles) {
+            var tPos2 = new Vector2(t.transform.position.x, t.transform.position.z);
+            float dist = Vector2.Distance(pos2, tPos2);
+            if (dist < smallestDist) {
+                smallestDist = dist;
+                bestPos = t.gridPos;
+            }
+        }
+        return bestPos;
+    }
+
     public List<TileController> GetTilesInRadius(Vector2 gridPos, float radius)
     {
         var _tiles = new List<TileController>();
@@ -196,43 +216,48 @@ public class EnvironmentManager : MonoBehaviour
         backgroundFire.PlaySilent();
     }
 
-    public void AttemptSpread(Vector2 gridPos, Fire fireData)
+    //gridPos, fireTemp: fireSource.temp, windDir: windDir, windSpeed: windSpeed
+    public void AttemptSpread(Vector2 gridPos, Fire fireData = null, float fireTemp = -1, cardinalDirection windDir = 0, float localWindSpeed = -1)
     {
-        if (fireData == null) return;
+        if (fireData == null && fireTemp == -1) return;
+        if (fireData != null) fireTemp = fireData.temp;
 
         var left = getTileAtPos(gridPos + Vector2.left);
         var right = getTileAtPos(gridPos + Vector2.right);
         var up = getTileAtPos(gridPos + Vector2.up);
         var down = getTileAtPos(gridPos + Vector2.down);
 
-        if (left) left.Ignite(fireData);
-        if (right) right.Ignite(fireData);
-        if (up) up.Ignite(fireData);    
-        if (down) down.Ignite(fireData);
+        if (left) left.Ignite(fireData, fireTemp: fireTemp);
+        if (right) right.Ignite(fireData, fireTemp: fireTemp);
+        if (up) up.Ignite(fireData, fireTemp: fireTemp);    
+        if (down) down.Ignite(fireData, fireTemp: fireTemp);
 
-        if (currentWindSpeed == 0) return;
-        float windPercent = currentWindSpeed / maxWind;
+        bool useLocal = localWindSpeed != -1;
+        float _windSpeed = useLocal ? localWindSpeed : currentWindSpeed;
+        if (_windSpeed <= 0) return;
+
+        float windPercent = _windSpeed / maxWind;
         int windSpreadDist = Mathf.RoundToInt(windPercent * maxWindPushDist);
-        SpreadToFarTiles(gridPos, windSpreadDist, fireData);
+        SpreadToFarTiles(gridPos, windSpreadDist, fireData, fireTemp, useLocal ? windDir : currentWindDir);
     }
 
-    void SpreadToFarTiles(Vector2 gridPos,  float windSpreadDist, Fire fireData)
+    void SpreadToFarTiles(Vector2 gridPos,  float windSpreadDist, Fire fireData, float fireTemp, cardinalDirection windDir)
     {
         var targets = new List<Vector2>();
-        var dir = GetWindDirectionVector();
+        var dir = GetWindDirectionVector(windDir);
         for (int i = 1; i < windSpreadDist; i++) {
             targets.Add(gridPos + dir * i);
         }
         foreach (var t in targets) {
             var targetTile = getTileAtPos(t);
-            if (targetTile) targetTile.Ignite(fireData);
+            if (targetTile) targetTile.Ignite(fireData, fireTemp: fireTemp);
 
         }
     }
 
-    Vector2 GetWindDirectionVector()
+    Vector2 GetWindDirectionVector(cardinalDirection dir)
     {
-        switch (currentWindDir) {
+        switch (dir) {
             case cardinalDirection.NORTH:
                 return Vector2.up;
             case cardinalDirection.EAST:
@@ -251,7 +276,7 @@ public class EnvironmentManager : MonoBehaviour
 
         int index = (int)((pos.x * gridSize) + pos.y);
 
-        if (tiles == null || BurningTiles.Contains(pos)) return null;
+        if (tiles == null) return null;
         if (index < tiles.Count && index > 0) return tiles[index];
         return null;
     }
@@ -282,9 +307,14 @@ public class EnvironmentManager : MonoBehaviour
 
         tickCooldown -= Time.deltaTime;
         if (tickCooldown <= 0) {
-            foreach (var tile in tiles) if (tile.onFire) tile.Tick();
+            foreach (var tile in tiles) if (tile.onFire || tile.hasWind) tile.Tick();
             tickCooldown = tickTime;
         }        
+    }
+
+    public float GetTickNumber(float timeInSeconds)
+    {
+        return timeInSeconds / tickTime;
     }
 
     public void ToggleObjects()

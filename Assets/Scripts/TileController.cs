@@ -5,6 +5,7 @@ using UnityEditor;
 using UnityEngine;
 using UnityEngine.UIElements;
 
+[SelectionBase]
 public class TileController : MonoBehaviour
 {
 
@@ -29,7 +30,41 @@ public class TileController : MonoBehaviour
     public Material dryMat;
     public Material wetMat;
     bool dontSpread;
-    [SerializeField] GameObject ground; 
+    [SerializeField] GameObject ground;
+
+    [Header("LocalWind")]
+    [SerializeField] cardinalDirection windDir;
+    [SerializeField] float windSpeed, ticksLeft;
+    GameObject windObj;
+    [HideInInspector] public bool hasWind;
+
+    [SerializeField] TileObject fireSource;
+
+    public void SummonWind(cardinalDirection dir, float speed, int ticks)
+    {
+        windDir = dir;
+        windSpeed = speed;
+        ticksLeft = ticks;
+
+        if (hasWind) return;
+
+        windObj = Instantiate(gMan.windEffect, transform);
+        float yRot = 0;
+        switch (windDir) {
+            case cardinalDirection.NORTH:
+                yRot = 270;
+                break;
+            case cardinalDirection.SOUTH:
+                yRot = 90;
+                break;
+            case cardinalDirection.WEST:
+                yRot = 180;
+                break;
+        }
+        windObj.transform.localEulerAngles = new Vector3(0, yRot, 0);
+        windObj.SetActive(true);
+        hasWind = true;
+    }
 
     public bool IsDry()
     {
@@ -117,6 +152,7 @@ public class TileController : MonoBehaviour
             if (amountNeeded <= 0) break;
         }
         if (amountNeeded > 0) {
+            //print("tile " + gridPos + " tried to burn its objects but the fire wants more. fuel remaining on tile: " + fuel);
             return fuel > amountNeeded;
         }
         return true;
@@ -139,6 +175,8 @@ public class TileController : MonoBehaviour
     {
         amountNeeded *= eMan.GetFuelBurnModifier(otherFire.temp);
         if (otherFire.temp > maxTemp) amountNeeded *= 2;
+
+        //print("tile " + gridPos + " burned by " + amountNeeded);
         fuel = Mathf.Max(0, fuel - amountNeeded);
     }
 
@@ -168,7 +206,9 @@ public class TileController : MonoBehaviour
     {
         gMan = GameManager.i;
         eMan = EnvironmentManager.i;
-        ground.SetActive(true);
+        if (ground != null) ground.SetActive(true);
+
+        foreach (var o in objects) if (o.isFireSource) fireSource = o;
 
         SetMaterial();
     }
@@ -193,31 +233,35 @@ public class TileController : MonoBehaviour
         if (gMan.selectedTile == this) gMan.selectedTile = null;
     }
 
-    public void Ignite(Fire otherFire, bool alwaysIgnite = false)
+    public void Ignite(Fire otherFire, bool alwaysIgnite = false, float fireTemp = -1)
     {
+        if (otherFire != null) fireTemp = otherFire.temp;
+
         if (onFire) {
-            if (otherFire != null && fireData != null && otherFire.temp > fireData.temp) fireData.temp = Mathf.Lerp(fireData.temp, otherFire.temp, eMan.fireTempSpreadValue);
+            if (fireTemp != -1 && fireData != null && fireTemp > fireData.temp) fireData.temp = Mathf.Lerp(fireData.temp, fireTemp, eMan.fireTempSpreadValue);
             return;
         }
 
-        if (otherFire == null && !alwaysIgnite) return;
-        if (!alwaysIgnite && !WillIgnite(otherFire)) return;
+        if (fireTemp == -1 && !alwaysIgnite) return;
+        if (!alwaysIgnite && !WillIgnite(otherFire, fireTemp)) return;
         
         var fireObj = Instantiate(gMan.firePrefab, transform);
         fireData = fireObj.GetComponent<Fire>();
         fireData.tile = this;
         onFire = true;
-        eMan.BurningTiles.Add(gridPos);
+        //eMan.BurningTiles.Add(gridPos);
 
         if (otherFire == null) return;
-        fireData.temp = Mathf.Max(fireData.temp,otherFire.temp);
+        fireData.temp = Mathf.Max(fireData.temp, fireTemp);
     }
 
-    bool WillIgnite(Fire otherFire)
+    bool WillIgnite(Fire otherFire = null, float fireTemp = -1)
     {
-        if (otherFire.age < eMan.minAge) return false;
+        if (otherFire != null) fireTemp = otherFire.temp;
+        if (otherFire != null && otherFire.age < eMan.minAge) return false;
+
         float roll = Random.Range(0.0f, 1);
-        bool willIgnite = roll < chanceToIgnite(otherFire);
+        bool willIgnite = roll < chanceToIgnite(otherFire, fireTemp);
         return willIgnite;
     }
 
@@ -237,6 +281,8 @@ public class TileController : MonoBehaviour
         else objects.Add(Instantiate(newObj.prefab, transform).GetComponent<TileObject>());
         var obj = objects[objects.Count - 1];
         if (hide) obj.gameObject.SetActive(false);
+
+        if (obj.isFireSource) fireSource = obj;
         return obj;
     }
 
@@ -253,18 +299,20 @@ public class TileController : MonoBehaviour
         dontSpread = true;
     }
 
-    float chanceToIgnite(Fire otherfire)
+    float chanceToIgnite(Fire otherfire, float fireTemp = -1)
     {
+        if (otherfire != null) fireTemp = otherfire.temp;
+
         float groundMoisture = CheckMoisture();
         float objectMoisture = 0;
         foreach (var o in objects) objectMoisture += o.CheckMoisture();
         float totalMoisture = groundMoisture + objectMoisture;
 
         float highestMinTemp = GetHighestMinTemp();
-        bool lowTempFire = otherfire.temp <= eMan.lowTempFireThreshold;
+        bool lowTempFire = fireTemp <= eMan.lowTempFireThreshold;
         bool tooWetForLowTempFire = lowTempFire && totalMoisture > eMan.lowTempFireMoistureThreshold;
 
-        if (totalMoisture > 1 || otherfire.temp < highestMinTemp || tooWetForLowTempFire) return 0.05f;
+        if (totalMoisture > 1 || fireTemp < highestMinTemp || tooWetForLowTempFire) return 0.05f;
         return eMan.fireSpreadChance * (1 - totalMoisture);
     }
 
@@ -285,13 +333,24 @@ public class TileController : MonoBehaviour
 
     public void Tick()
     {
+        ticksLeft -= 1;
+        if (ticksLeft <= 0 && windSpeed > 0) {
+            if (windObj != null) Destroy(windObj);
+            windSpeed = 0;
+            hasWind = false;
+        }
+
+        if (fireSource != null && hasWind) {
+            SpreadFire();
+        }
+
         if (onFire && fireData != null) {
             fireData.Tick();
             if (fuel > 3 && fireData.temp >= GetHighestMinTemp()) SpreadFire();
         }
         if (onFire && fireData == null) {
             onFire = false;
-            fuel = 0;
+            //fuel = 0;
         }
 
         if (fuel < 3) groundRenderer.material = gMan.burnedGrass;
@@ -302,11 +361,29 @@ public class TileController : MonoBehaviour
         if (dontSpread) return;
         dontSpread = false;
 
-        eMan.AttemptSpread(gridPos, fireData);
+        if (hasWind) {
+            if (fireSource != null) eMan.AttemptSpread(gridPos, fireTemp: fireSource.temp, windDir: windDir, localWindSpeed: windSpeed);
+            else eMan.AttemptSpread(gridPos, fireData, windDir: windDir, localWindSpeed: windSpeed);
+        }
+        else eMan.AttemptSpread(gridPos, fireData);        
     }
 
     private void OnDestroy()
     {
         if (gMan.selectedTile == this) gMan.selectedTile = null;
+    }
+
+    public void AddFuel(float additional)
+    {
+        fuel += additional;
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        if (tileObjectData.Count <= 0) return;
+
+        string label = "";
+        foreach (var o in tileObjectData) if (o) label += o.name;
+        Handles.Label(transform.position, label);
     }
 }

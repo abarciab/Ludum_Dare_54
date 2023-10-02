@@ -68,21 +68,26 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8ef5ad8cfa29a414e99e0b3112a2833c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  patrolPoints:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  patrol: 0
+  patrolPoints: []
   waitTimeRange: {x: 1, y: 5}
-  agent: {fileID: 2214769112538677946}
+  home: {fileID: 0}
+  runFromFireDist: 0
+  putOutFires: 1
+  putOutFireDist: 3.65
+  waterRadius: 3.38
+  useWaterResetTime: 0.7
+  fireSenseRadius: 10.3
+  fireSenseFromSelf: 1
+  fireSenseSource: {fileID: 0}
   bounceFrequency: 20
   bounceMagnitude: 10
   rotFrequency: 45
   rotMagnitude: 30
   rotOffset: 0
+  destinationThreshold: 1.5
   model: {fileID: 730099952447983923}
-  fireSenseRadius: 8.37
-  targetdistanceAway: 3
+  agent: {fileID: 2214769112538677946}
 --- !u!1001 &985003490244589272
 PrefabInstance:
   m_ObjectHideFlags: 0
