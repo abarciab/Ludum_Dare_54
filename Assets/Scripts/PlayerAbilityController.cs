@@ -52,7 +52,12 @@ public class PlayerAbilityController : MonoBehaviour
 
     void Update()
     {
+
+
         if (usingLightning && lightningUsesLeft <= 0) usingLightning = false;
+        if (usingGrow && growUsesLeft <= 0) usingGrow = false;
+        if (usingDry && dryUsesLeft <= 0) usingDry = false;
+        if (usingWind && windUsesLeft <= 0) usingWind = false;
 
         if (EventSystem.current.IsPointerOverGameObject()) return;
 
@@ -121,24 +126,28 @@ public class PlayerAbilityController : MonoBehaviour
     {
         usingLightning = !usingLightning;
         if (usingLightning) SelectAbility(1);
+        gMan.Click();
     }
 
     public void ToggleGrow()
     {
         usingGrow = !usingGrow;
         if (usingGrow) SelectAbility(2);
+        gMan.Click();
     }
 
     public void ToggleDry()
     {
         usingDry = !usingDry;
         if (usingDry) SelectAbility(3);
+        gMan.Click();
     }
 
     public void ToggleWind()
     {
         usingWind = !usingWind;
         if (usingWind) SelectAbility(4);
+        gMan.Click();
     }
 
     public void SelectAbility(int ability)

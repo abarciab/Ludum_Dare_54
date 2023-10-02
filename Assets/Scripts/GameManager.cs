@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Events;
 using UnityEngine.SceneManagement;
+using UnityEngine.UIElements;
 
 public class GameManager : MonoBehaviour
 {
@@ -31,7 +32,9 @@ public class GameManager : MonoBehaviour
 
     [Header("Misc")]
     public float detailRenderDist = 10;
-    public float detailFadeDist = 3;
+    public float detailFadeDist = 3, endGameFadeTime = 4;
+    [SerializeField] GameObject fade, fade2;
+    [SerializeField] Sound buttonClick, regrowSound;
 
     CameraControllers cam;
     UIController ui;
@@ -41,13 +44,23 @@ public class GameManager : MonoBehaviour
         cam = FindObjectOfType<CameraControllers>();
         ui = FindObjectOfType<UIController>();
 
-        StartCoroutine(ShowText());
+        StartCoroutine(ShowText(false));
+
+        buttonClick = Instantiate(buttonClick);
+        regrowSound = Instantiate(regrowSound);
     }
 
     private void Update()
     {
         if (selectedTile) highlight.position = selectedTile.transform.position;
         highlight.gameObject.SetActive(selectedTile);
+
+        if (Input.GetKeyDown(KeyCode.R)) RestartLevel();
+    }
+
+    public void Click()
+    {
+        buttonClick.Play();
     }
 
     public void RestartLevel()
@@ -63,13 +76,21 @@ public class GameManager : MonoBehaviour
 
     IEnumerator ShowRegrow()
     {
+        //regrowSound.Play();
+        fade2.SetActive(false);
+        yield return new WaitForEndOfFrame();
+        fade2.SetActive(true);
+        yield return new WaitForSeconds(0.5f);
+
         UIController.i.HideAll();
-        cam.LockAndFrameAll(true);
-
         EnvironmentManager.i.ExtinguishFlames();
-        yield return new WaitForSeconds(1.5f);
-        EnvironmentManager.i.RegrowForest();
+        EnvironmentManager.i.ClearBurned(1.5f);
+        cam.ShowRegrow(EnvironmentManager.i.GetRegrowTime() + 2.5f + textDarkenTime);
 
+        yield return new WaitForSeconds(1.5f);
+
+        EnvironmentManager.i.RegrowForest();
+        
         while (EnvironmentManager.i.regrowTimeLeft > 0) {
             yield return new WaitForEndOfFrame();
         }
@@ -77,15 +98,39 @@ public class GameManager : MonoBehaviour
         StartCoroutine(ShowText());
     }
 
-    IEnumerator ShowText()
+    IEnumerator ShowText(bool fadeIn = true)
     {
         UIController.i.HideAll();
 
-        ui.DarkenScreen(textDarkenTime);
+        ui.DarkenScreen(fadeIn ? textDarkenTime : 0);
         yield return new WaitForSeconds(textDarkenTime);
         ui.ShowText(nextText);
         yield return new WaitForSeconds(textshowTime);
         ui.ShowContinueButton();
+    }
+
+    public void TransitionToNextLevel()
+    {
+        Click();
+        StartCoroutine(AnimateToNextLevel());
+    }
+
+    IEnumerator AnimateToNextLevel()
+    {
+        fade.SetActive(false);
+        yield return new WaitForSeconds(1.5f); 
+        cam.LockAndFrameAll(true);
+
+        if (currentLevel >= LevelPrefabs.Count) {
+            FindObjectOfType<MusicPlayer>().FadeOutCurrent(endGameFadeTime);
+            yield return new WaitForSeconds(endGameFadeTime);
+            SceneManager.LoadScene(0);
+            yield break;
+        }
+
+        fade.SetActive(true);
+        UIController.i.DisableTextBackingGroup();
+        NextLevel();
     }
 
     public void NextLevel()

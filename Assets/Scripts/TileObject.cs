@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
 using Unity.IO.LowLevel.Unsafe;
+using UnityEditor.ShaderGraph.Internal;
 using UnityEngine;
 
 public class TileObject : MonoBehaviour
@@ -227,9 +228,21 @@ public class TileObject : MonoBehaviour
         transform.transform.localScale = targetScale;
     }
 
-    public void ClearBurned()
+    public void ClearBurned(float clearTime)
     {
-        if (fuelValue <= 3) Destroy(gameObject);
+        if (fuelValue <= 3) StartCoroutine(AnimateClearing(clearTime));
+    }
+
+    IEnumerator AnimateClearing(float time)
+    {
+        float timePassed = 0;
+        Vector3 originalScale = transform.localScale;
+        while (timePassed < time) {
+            timePassed += Time.deltaTime;
+            transform.localScale = Vector3.Lerp(originalScale, Vector3.zero, timePassed/time); 
+            yield return new WaitForEndOfFrame();
+        }
+        Destroy(gameObject);
     }
 
     void SetMaterial()

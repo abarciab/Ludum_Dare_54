@@ -115,6 +115,12 @@ public class Sound : ScriptableObject
         Play(true, index:index);
     }
 
+    public float GetClipLength()
+    {
+        if (clips.Count == 0 || clips[0].clip == null) return 0;
+        return clips[0].clip.length;
+    }
+
     public void Play(Transform caller = null, bool restart = true)
     {
         if (!instantialized) {

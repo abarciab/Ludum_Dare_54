@@ -1,10 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
-using Unity.VisualScripting.Dependencies.NCalc;
-using UnityEditor.ShaderGraph.Internal;
-using UnityEngine;
-using UnityEngine.Rendering.Universal;
+using UnityEngine; 
 
 [System.Serializable]
 public class regrowData
@@ -79,12 +75,23 @@ public class EnvironmentManager : MonoBehaviour
         foreach (var f in currentFires) if (f != null) Destroy(f.gameObject);
     }
 
+    public float GetRegrowTime()
+    {
+        return regrowTime * regrowTimeRange.y;
+    }
+
+    public void ClearBurned(float clearTime)
+    {
+        foreach (var tile in tiles) {
+            tile.ClearBurned(clearTime);
+        }
+    }
+
     public void RegrowForest()
     {
         windParticles.gameObject.SetActive(false);
 
         foreach (var tile in tiles) {
-            tile.ClearBurned();
             if (tile.WasBurned()) {
                 foreach (var plant in regrowPlants) if (plant.shouldPlace(burnedRegrowChance)) tile.Regrow(plant.obj, regrowScaleRange, Random.Range(regrowTimeRange.x, regrowTimeRange.y) * regrowTime);
             }
@@ -126,6 +133,8 @@ public class EnvironmentManager : MonoBehaviour
         Transform closestFire = null;
 
         foreach (var f in currentFires) {
+            if (f == null) continue;
+
             var firePos = new Vector2(f.transform.position.x, f.transform.position.z);
             float dist = Vector3.Distance(pos, f.transform.position);
             f.gameObject.name = "fire";
@@ -193,7 +202,7 @@ public class EnvironmentManager : MonoBehaviour
 
     public float GetTreeProgress()
     {
-        if (trees == null || trees.Count == 0) return 0;
+        //if (trees == null || trees.Count == 0) return 0;
         
         int burnedCount = 0;
         foreach (var t in trees) {

@@ -1,51 +1,63 @@
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class MusicPlayer : MonoBehaviour
 {
-    [SerializeField] Sound Music1, Music2, ambientWind;
-    bool fadingOut;
-    [SerializeField] bool muted;
+    [SerializeField] List<Sound> tracks = new List<Sound>();
+    float timeLeft, waitTime;
+    [SerializeField] Vector2 silenceWaitRange = new Vector2(1, 10);
+    [SerializeField] Sound ambient;
+    int currentIndex;
 
     private void Start()
     {
-        Music1 = Instantiate(Music1);
-        Music2 = Instantiate(Music2);
-        ambientWind = Instantiate(ambientWind);
+        ambient = Instantiate(ambient);
+        ambient.Play();
 
-        Music1.Play();
-        ambientWind.Play();
-        Music2.PlaySilent();
+        for (int i = 0; i < tracks.Count; i++) {
+            tracks[i] = Instantiate(tracks[i]);
+        }
+        StartNext();
     }
 
-    public void FadeOut()
+    public void FadeOutCurrent(float time)
     {
-        Music2.PercentVolume(0, 0.05f);
-        Music1.PercentVolume(0, 0.05f);
-        ambientWind.PercentVolume(0, 0.05f);
-        fadingOut = true;
+        timeLeft = waitTime = Mathf.Infinity;
+        StartCoroutine(FadeOut(time));
+    }
+
+    IEnumerator FadeOut(float time)
+    {
+        float timePassed = 0;
+        while (timePassed < time) {
+            tracks[currentIndex].PercentVolume(Mathf.Lerp(1, 0, timePassed / time));
+            timePassed += Time.deltaTime;
+            yield return new WaitForEndOfFrame();
+        }
+    }
+
+    void StartNext()
+    {
+        currentIndex = Random.Range(0, tracks.Count);
+        var selected = tracks[currentIndex];
+        selected.Play();
+        timeLeft = selected.GetClipLength();
+        waitTime = Mathf.Infinity;
     }
 
     private void Update()
     {
-        if (Input.GetKeyDown(KeyCode.M)) {
-            muted = !muted;
+        timeLeft -= Time.deltaTime;
+        if (timeLeft == Mathf.Infinity) waitTime -= Time.deltaTime;
+
+        if (timeLeft < 0) {
+            timeLeft = Mathf.Infinity;
+            waitTime = Random.Range(silenceWaitRange.x, silenceWaitRange.y);
         }
-
-        if (muted) {
-            Music1.PercentVolume(0);
-            Music2.PercentVolume(0);
-            ambientWind.PercentVolume(0);
-            return;
+        if (waitTime <= 0) {
+            StartNext();
         }
-
-        if (fadingOut) return;
-
-        
-        Music2.PercentVolume(0, 0.05f);
-        Music1.PercentVolume(1, 0.05f);
-        
     }
+
 }

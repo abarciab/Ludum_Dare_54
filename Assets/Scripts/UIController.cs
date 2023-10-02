@@ -38,6 +38,8 @@ public class UIController : MonoBehaviour
 
     [Space()]
     [SerializeField] Slider progressSlider;
+    [SerializeField] Gradient sliderGradient;
+    [SerializeField] Image sliderFill;
     [SerializeField] TextMeshProUGUI progressText;
 
     [Space()]
@@ -95,6 +97,11 @@ public class UIController : MonoBehaviour
         textBackingGroup.alpha = 1;
     }
 
+    public void DisableTextBackingGroup()
+    {
+        textBackingGroup.alpha = 0;
+    }
+
     public void ShowGameplayUI()
     {
         bottomBar.gameObject.SetActive(true);
@@ -144,6 +151,7 @@ public class UIController : MonoBehaviour
 
         float progress = eMan.GetTreeProgress();
         progressSlider.value = progress;
+        sliderFill.color = sliderGradient.Evaluate(progressSlider.value);
         progressText.text = Mathf.RoundToInt(progress * 100) + "%";
         nextLevelButton.SetActive(progress >= .8 && progressSlider.gameObject.activeInHierarchy);
 

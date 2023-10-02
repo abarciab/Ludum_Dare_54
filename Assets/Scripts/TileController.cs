@@ -74,9 +74,9 @@ public class TileController : MonoBehaviour
         return moistureContent < eMan.dryThreshold;
     }
 
-    public void ClearBurned()
+    public void ClearBurned(float clearTime)
     {
-        foreach (var o in objects) if (o != null) o.ClearBurned();
+        foreach (var o in objects) if (o != null) o.ClearBurned(clearTime);
     }
 
     public bool WasBurned()
@@ -378,6 +378,8 @@ public class TileController : MonoBehaviour
         fuel += additional;
     }
 
+    #if (UNITY_EDITOR) 
+
     private void OnDrawGizmosSelected()
     {
         if (tileObjectData.Count <= 0) return;
@@ -386,4 +388,6 @@ public class TileController : MonoBehaviour
         foreach (var o in tileObjectData) if (o) label += o.name;
         Handles.Label(transform.position, label);
     }
+
+    #endif
 }

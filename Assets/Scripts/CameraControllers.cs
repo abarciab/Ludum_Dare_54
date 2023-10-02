@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Timeline;
 
 public class CameraControllers : MonoBehaviour
 {
@@ -11,6 +12,37 @@ public class CameraControllers : MonoBehaviour
     float scrollDelta;
     Vector3 lastMousePos;
     [SerializeField] LayerMask groundLayer;
+    bool animating;
+
+    [Space()]
+    [SerializeField] float maxRegrowAnimY = 40;
+
+    public void ShowRegrow(float regrowTime)
+    {
+        transform.position = GameManager.i.transform.position;
+        StartCoroutine(AnimateRegrow(regrowTime));
+    }
+
+    IEnumerator AnimateRegrow(float time)
+    {
+        animating = true;
+        float timePassed = 0;
+        var cam = Camera.main.transform;
+        cam.localPosition = new Vector3(0, 0, -20);
+
+        while (timePassed < time) {
+            timePassed += Time.deltaTime;
+            float progress = timePassed / time;
+
+            cam.localPosition = new Vector3(0, progress * maxRegrowAnimY, -20);
+            cam.LookAt(transform);
+            transform.localEulerAngles = new Vector3(0, progress * 360, 0);
+
+            yield return new WaitForEndOfFrame();
+        }
+
+        animating = false;
+    }
 
     private void Start()
     {
@@ -26,11 +58,14 @@ public class CameraControllers : MonoBehaviour
         float yMid = Mathf.Lerp(posLimits.z, posLimits.w, 0.5f);
         transform.position = new Vector3(xMid, yLimits.y, yMid);
         Camera.main.transform.localEulerAngles = new Vector3(lockedCameraXAngle, 0, 0);
+        Camera.main.transform.localPosition = Vector3.zero;
         transform.localEulerAngles = Vector3.zero;
     }
 
     private void Update()
     {
+        if (animating) return;
+
         var moveDir = GetMoveDir();
 
         moveDelta = Vector3.Lerp(moveDelta, moveDir, moveSmoothness);
