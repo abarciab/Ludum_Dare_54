@@ -10798,7 +10798,7 @@ MonoBehaviour:
   unburnedRegrowChance: 0.01
   regrowScaleRange: {x: 0.5, y: 2}
   regrowTimeRange: {x: 0.2, y: 1}
-  regrowTimeLeft: -8308.434
+  regrowTimeLeft: -8311.051
   currentWindDir: 0
   currentWindSpeed: 0
   windParticles: {fileID: 1058163842}

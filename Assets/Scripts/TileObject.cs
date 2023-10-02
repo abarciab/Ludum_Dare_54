@@ -1,8 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using System.Reflection;
-using Unity.IO.LowLevel.Unsafe;
-using UnityEditor.ShaderGraph.Internal;
 using UnityEngine;
 
 public class TileObject : MonoBehaviour
