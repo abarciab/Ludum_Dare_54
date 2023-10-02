@@ -50,6 +50,8 @@ public class UIController : MonoBehaviour
     [Header("Misc")]
     [SerializeField] GameObject nextLevelButton;
     [SerializeField] GameObject restartButton;
+    [SerializeField] TextMeshProUGUI restartText;
+    [SerializeField] string restartInstructions = "R to restart", rotateInstructions = "R to roate";
 
     [Header("Text")]
     [SerializeField] CanvasGroup textBackingGroup;
@@ -139,6 +141,8 @@ public class UIController : MonoBehaviour
 
     private void Update()
     {
+        restartText.text = abilityController.usingWind ? rotateInstructions : restartInstructions;
+
         SetButtonVisuals(lightningButton, abilityController.usingLightning, lightningUses, abilityController.lightningUsesLeft, lightningButtonParent);
         SetButtonVisuals(growButton, abilityController.usingGrow, growUses, abilityController.growUsesLeft, growButtonParent);
         SetButtonVisuals(dryButton, abilityController.usingDry, dryUses, abilityController.dryUsesLeft, dryButtonParent);
@@ -150,7 +154,7 @@ public class UIController : MonoBehaviour
         }
 
         float progress = eMan.GetTreeProgress();
-        progressSlider.value = progress;
+        progressSlider.value = Mathf.Lerp(progressSlider.value, progress, 0.1f);
         sliderFill.color = sliderGradient.Evaluate(progressSlider.value);
         progressText.text = Mathf.RoundToInt(progress * 100) + "%";
         nextLevelButton.SetActive(progress >= .8 && progressSlider.gameObject.activeInHierarchy);

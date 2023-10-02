@@ -86,7 +86,15 @@ public class TileController : MonoBehaviour
 
     public void Regrow(TileObjectData newPlant, Vector2 scaleRange, float growTime)
     {
+        if (ContainsTree() && newPlant.prefab.GetComponent<TileObject>().tree) return;
+
         AddObject(newPlant, true).Regrow(growTime, scaleRange);
+    }
+
+    bool ContainsTree()
+    {
+        foreach (var o in tileObjectData) if (o.prefab.GetComponent<TileObject>().tree) return true;
+        return false;
     }
 
     public void Init(GameManager gMan, EnvironmentManager eMan)

@@ -45,7 +45,6 @@ public class GridGenerator : MonoBehaviour
         foreach (var t in tiles) {
             bool foundGround = Physics.Raycast(t.transform.position + Vector3.up * 200, Vector3.down, out var hit, 500, terrainLayer);
             if (foundGround) t.transform.position = hit.point;
-            else print("not found :(");
         }
     }
 

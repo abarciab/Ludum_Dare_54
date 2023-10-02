@@ -102,7 +102,7 @@ public class PlayerAbilityController : MonoBehaviour
         if (gMan.selectedTile == null || growUsesLeft <= 0) return;
 
         var selected = gMan.selectedTile;
-        Instantiate(LightningEffectPrefab, selected.transform.position, Quaternion.identity, transform);
+        Instantiate(growEffectPrefab, selected.transform.position, Quaternion.identity, transform);
         growSound.Play();
         var tiles = EnvironmentManager.i.GetTilesInRadius(selected.gridPos, growRadius);
         foreach (var tile in tiles) tile.Grow(wetMod, grassObject);
@@ -118,6 +118,7 @@ public class PlayerAbilityController : MonoBehaviour
         Instantiate(LightningEffectPrefab, selected.transform.position, Quaternion.identity, transform);
         lightningSound.Play();
         selected.Ignite(null, true);
+        CameraShake.i.Shake(0.1f, 0.4f);
 
         lightningUsesLeft--;
     }

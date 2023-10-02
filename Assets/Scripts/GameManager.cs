@@ -38,9 +38,11 @@ public class GameManager : MonoBehaviour
 
     CameraControllers cam;
     UIController ui;
+    PlayerAbilityController abilityController;
 
     private void Start()
     {
+        abilityController = FindObjectOfType<PlayerAbilityController>();
         cam = FindObjectOfType<CameraControllers>();
         ui = FindObjectOfType<UIController>();
 
@@ -55,7 +57,7 @@ public class GameManager : MonoBehaviour
         if (selectedTile) highlight.position = selectedTile.transform.position;
         highlight.gameObject.SetActive(selectedTile);
 
-        if (Input.GetKeyDown(KeyCode.R)) RestartLevel();
+        if (Input.GetKeyDown(KeyCode.R) && !abilityController.usingWind) RestartLevel();
     }
 
     public void Click()

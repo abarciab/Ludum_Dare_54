@@ -3234,6 +3234,7 @@ GameObject:
   - component: {fileID: 1804052706}
   - component: {fileID: 1804052708}
   - component: {fileID: 1804052707}
+  - component: {fileID: 1804052709}
   m_Layer: 5
   m_Name: subtitle
   m_TagString: Untagged
@@ -3315,7 +3316,7 @@ MonoBehaviour:
   m_fontSizeMin: 18
   m_fontSizeMax: 72
   m_fontStyle: 0
-  m_HorizontalAlignment: 2
+  m_HorizontalAlignment: 32
   m_VerticalAlignment: 256
   m_textAlignment: 65535
   m_characterSpacing: 0
@@ -3358,6 +3359,22 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1804052705}
   m_CullTransparentMesh: 1
+--- !u!114 &1804052709
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1804052705}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 745b85b090b73eb4982036500b710e57, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  textOptions:
+  - burn down the forest...responsibly
+  - Only YOU can create forest fires
+  textBox: {fileID: 1804052707}
 --- !u!1 &1911063903
 GameObject:
   m_ObjectHideFlags: 0
