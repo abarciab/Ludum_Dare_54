@@ -55,8 +55,9 @@ public class Human : MonoBehaviour
 
     private void Update()
     {
-        float fireDist = eMan.GetClosestFireDist(fireSenseSource.position);
-        if (fireDist < fireSenseRadius || fireDist < runFromFireDist) DoFireBehavior();
+        var relevantFirePos = eMan.GetClosestFirePos(fireSenseSource.position);
+        float fireDist = Vector3.Distance(relevantFirePos, fireSenseSource.position);
+        if (fireDist < fireSenseRadius || fireDist < runFromFireDist) DoFireBehavior(relevantFirePos);
         else DoSafeBehavior();
 
         bool freakingOut = freakOut && fireDist != Mathf.Infinity;
@@ -75,22 +76,21 @@ public class Human : MonoBehaviour
         transform.localEulerAngles = rot;
     }
 
-    void DoFireBehavior()
+    void DoFireBehavior(Vector3 relavantFirePos)
     {
-        float fireDist = eMan.GetClosestFireDist(transform.position);
+        float fireDist = 0;
+        var closestToMe = eMan.GetClosestFirePos(transform.position);
+        if (Vector3.Distance(closestToMe, relavantFirePos) < 0.1f) fireDist = eMan.GetClosestFireDist(transform.position);
+        else fireDist = Vector3.Distance(relavantFirePos, transform.position);
+
         if (fireDist < runFromFireDist) RunFromFire();
-        else if (putOutFires) TryToPutOutFire(fireDist);
+        else if (putOutFires) TryToPutOutFire(fireDist, relavantFirePos);
     }
 
-    void TryToPutOutFire(float fireDist)
+    void TryToPutOutFire(float fireDist, Vector3 firePos)
     {
-        if (fireDist > putOutFireDist) GoToFire(fireDist);
+        if (fireDist > putOutFireDist) agent.destination =firePos;
         else UseWaterOnFire();
-    }
-
-    void GoToFire(float fireDist)
-    {
-        agent.destination = eMan.GetClosestFirePos(transform.position);
     }
 
     void UseWaterOnFire()
