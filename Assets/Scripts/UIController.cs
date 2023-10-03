@@ -62,6 +62,7 @@ public class UIController : MonoBehaviour
     PlayerAbilityController abilityController;
     GameManager gMan;
     EnvironmentManager eMan;
+    [SerializeField] GameObject instructions;
 
     public void HideAll()
     {
@@ -120,6 +121,11 @@ public class UIController : MonoBehaviour
         ToggleBottomBar();
     }
 
+    public void ShowInstructions()
+    {
+        instructions.SetActive(true);
+    }
+
     private void Start()
     {
         gMan = GameManager.i;
@@ -141,6 +147,8 @@ public class UIController : MonoBehaviour
 
     private void Update()
     {
+        if (Input.GetKeyDown(KeyCode.I)) instructions.SetActive(!instructions.activeInHierarchy);
+
         restartText.text = abilityController.usingWind ? rotateInstructions : restartInstructions;
 
         SetButtonVisuals(lightningButton, abilityController.usingLightning, lightningUses, abilityController.lightningUsesLeft, lightningButtonParent);

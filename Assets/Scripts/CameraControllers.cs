@@ -58,7 +58,7 @@ public class CameraControllers : MonoBehaviour
         if (!lockCam) return;
         float xMid = Mathf.Lerp(posLimits.x, posLimits.y, 0.5f);
         float yMid = Mathf.Lerp(posLimits.z, posLimits.w, 0.5f);
-        transform.position = new Vector3(xMid, yLimits.y, yMid);
+        transform.position = new Vector3(xMid, yLimits.y/2, yMid);
         Camera.main.transform.localEulerAngles = new Vector3(lockedCameraXAngle, 0, 0);
         Camera.main.transform.localPosition = Vector3.zero;
         transform.localEulerAngles = Vector3.zero;

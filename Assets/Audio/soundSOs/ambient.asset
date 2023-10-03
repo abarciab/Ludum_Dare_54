@@ -22,7 +22,7 @@ MonoBehaviour:
   type: 0
   SynchronizePitchAndVolume: 1
   pitch: 1
-  volume: 0.02
+  volume: 0.065
   voiceLines: 0
   audioSource: {fileID: 0}
-  instantialized: 0
+  instantialized: 1

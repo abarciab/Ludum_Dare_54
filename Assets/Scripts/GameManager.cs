@@ -39,6 +39,9 @@ public class GameManager : MonoBehaviour
     CameraControllers cam;
     UIController ui;
     PlayerAbilityController abilityController;
+    bool shownInstructions;
+
+    bool animating;
 
     private void Start()
     {
@@ -54,6 +57,12 @@ public class GameManager : MonoBehaviour
 
     private void Update()
     {
+        if (Input.GetKeyDown(KeyCode.N) && !animating) {
+            animating = true;
+            Click();
+            StartCoroutine(AnimateToNextLevel(true));
+        }
+
         if (selectedTile) highlight.position = selectedTile.transform.position;
         highlight.gameObject.SetActive(selectedTile);
 
@@ -117,10 +126,10 @@ public class GameManager : MonoBehaviour
         StartCoroutine(AnimateToNextLevel());
     }
 
-    IEnumerator AnimateToNextLevel()
+    IEnumerator AnimateToNextLevel(bool skipStartup = false)
     {
         fade.SetActive(false);
-        yield return new WaitForSeconds(1.5f); 
+        if (!skipStartup) yield return new WaitForSeconds(1.5f); 
         cam.LockAndFrameAll(true);
 
         if (currentLevel >= LevelPrefabs.Count) {
@@ -137,6 +146,9 @@ public class GameManager : MonoBehaviour
 
     public void NextLevel()
     {
+        if (!shownInstructions) ui.ShowInstructions();
+        shownInstructions = true;
+
         cam.LockAndFrameAll(false);
 
         if (LevelPrefabs.Count == 0 || currentLevel >= LevelPrefabs.Count) return;
@@ -148,6 +160,7 @@ public class GameManager : MonoBehaviour
 
         UIController.i.ShowGameplayUI();
         currentLevel += 1;
+        animating = false;
     }
 
     private void OnDrawGizmosSelected()
